@@ -1,0 +1,20 @@
+import { Module } from '@nestjs/common';
+import { TicketsService } from './tickets.service';
+import { TicketsController } from './tickets.controller';
+import { Ticket } from './entities/ticket.entity';
+import { TypeOrmModule } from '@nestjs/typeorm/dist/typeorm.module';
+import { AuthModule } from '../auth/auth.module';
+import { UsersModule } from '../users/users.module';
+import { ProjectsModule } from '../projects/projects.module';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([Ticket]),
+    AuthModule,
+    UsersModule,
+    ProjectsModule
+  ],
+  controllers: [TicketsController],
+  providers: [TicketsService],
+})
+export class TicketsModule {}

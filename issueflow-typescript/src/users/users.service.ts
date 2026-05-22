@@ -5,6 +5,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
 import * as bcrypt from 'bcrypt';
+import {UserRole} from './entities/user.entity';
 
 
 @Injectable()
@@ -49,5 +50,15 @@ export class UsersService {
 
   async findByUsername(username: string): Promise<User | undefined> {
     return await this.usersRepository.findOne({ where: { username } });
+  }
+
+  async findAllByRole(role: string) {
+    if (role !== UserRole.ADMIN && role !== UserRole.DEVELOPER) {
+      throw new NotFoundException('Role must be either ADMIN or DEVELOPER');
+    }
+    return await this.usersRepository.find({
+      where: { role } ,
+      order: { id: 'ASC' },
+    });
   }
 }

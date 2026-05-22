@@ -14,8 +14,8 @@ export class ProjectsService {
     private usersService: UsersService,
   ) {}
 
-  create(createProjectDto: CreateProjectDto) {
-    const user = this.usersService.findOne(createProjectDto.ownerId);
+  async create(createProjectDto: CreateProjectDto) {
+    const user = await this.usersService.findOne(createProjectDto.ownerId);
     if (!user){
       throw new NotFoundException(`User with ID ${createProjectDto.ownerId} not found`);
     }
