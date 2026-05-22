@@ -6,7 +6,7 @@ Open a new terminal, and run:
 
 # Sending requests
 To send requests to a running project, send to http://localhost:3000/ (by deafualt) with the relevant service at the end. Use Thunder Client to manage requsts loacly.
-For services that require authentication, you must first send a POST request to \auth\login with a json containing a valid username and password. Then, copy the key posted back and plug it in the "Bearer" tab. Authentication will persist until logout or 1 hour had passed/
+For services that require authentication, which are all of them except user creation, you must first send a POST request to \auth\login with a json containing a valid username and password. Then, copy the key posted back and plug it in the "Bearer" tab. Authentication will persist until logout or 1 hour had passed/
 
 # Shuting the project down
 To shut the project down, first hit ctr+C in the terminal running the server.
@@ -27,6 +27,7 @@ Or, if you dont want to save DB state:
         "role": "ADMIN",
         "password": "ploplop"
     }
+    Note that only creating user does not require authentication. Theoretcly, this should still be protected by other means in order to avoid security breaches and attacks
 
 ##### Project regestry
     Requiers authentication. Supports creating, retrieving, modifing and deleting projects, with the coresponding POST, GET, PATCH, DELETE commands. Projects must be linked to a user.
@@ -37,3 +38,6 @@ Or, if you dont want to save DB state:
         "description": "dsgsdkgsdgsdg",
         "ownerId": 1
     }
+    Only the owner themselfs or an admin can create a project attached to a user.
+
+    

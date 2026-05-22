@@ -4,15 +4,21 @@ import { Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectRepository(Project) 
     private projectsRepository: Repository<Project>,
+    private usersService: UsersService,
   ) {}
 
   create(createProjectDto: CreateProjectDto) {
+    const user = this.usersService.findOne(createProjectDto.ownerId);
+    if (!user){
+      throw new NotFoundException(`User with ID ${createProjectDto.ownerId} not found`);
+    }
     const project = this.projectsRepository.create(createProjectDto);
     return this.projectsRepository.save(project);
   }
