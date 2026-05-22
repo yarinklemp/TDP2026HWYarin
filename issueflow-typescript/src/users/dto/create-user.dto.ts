@@ -19,4 +19,8 @@ export class CreateUserDto {
     @IsEnum(UserRole, {message: 'Role must be either ADMIN or DEVELOPER'})
     role: UserRole;
 
+    @IsString()
+    @IsNotEmpty()
+    @Length(6, 40, {message: 'Password must be at least 6 characters'})
+    password: string;
 }

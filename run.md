@@ -1,5 +1,5 @@
 # Start the project
-To start the project, run:
+To start the project, navigate to issuflow-typescript, and run:
 'docker compose up -d'
 Open a new terminal, and run:
 'npm run start:dev'

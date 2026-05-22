@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
+import * as bcrypt from 'bcrypt';
 
 
 @Injectable()
@@ -13,7 +14,10 @@ export class UsersService {
       private usersRepository: Repository<User>
   ) {}
   async create(createUserDto: CreateUserDto) {
-    const newUser = this.usersRepository.create(createUserDto);
+  
+    const { password, ...data } = createUserDto;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = this.usersRepository.create({...data, password: hashedPassword,});
     return await this.usersRepository.save(newUser);
   }
 
@@ -41,5 +45,9 @@ export class UsersService {
       throw new NotFoundException('User with ID ${id} not found');
     }
     return { message: 'User with ID #${id} has been deleted' };
+  }
+
+  async findByUsername(username: string): Promise<User | undefined> {
+    return await this.usersRepository.findOne({ where: { username } });
   }
 }
