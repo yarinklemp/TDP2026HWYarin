@@ -11,8 +11,8 @@ import { TicketsModule } from '../tickets/tickets.module';
   imports: [
     TypeOrmModule.forFeature([Project]),
     AuthModule, 
-    UsersModule, 
-    forwardRef(() =>TicketsModule)],
+    forwardRef(() => UsersModule), 
+    forwardRef(() => TicketsModule)],
   controllers: [ProjectsController],
   providers: [ProjectsService],
   exports: [ProjectsService],

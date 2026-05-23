@@ -11,7 +11,7 @@ import { ProjectsModule } from '../projects/projects.module';
   imports: [
     TypeOrmModule.forFeature([Ticket]),
     AuthModule,
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => ProjectsModule),
   ],
   controllers: [TicketsController],

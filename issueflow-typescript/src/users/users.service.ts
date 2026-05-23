@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException} from '@nestjs/common';
-import {InjectRepository} from "@nestjs/typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from "./entities/user.entity";
@@ -60,5 +60,17 @@ export class UsersService {
       where: { role } ,
       order: { id: 'ASC' },
     });
+  }
+
+  async findByUsernamesIgnoreCase(usernames: string[]) {
+    if (!usernames || usernames.length === 0) return [];
+    
+    const lowerCaseUsernames = usernames.map(u => u.toLowerCase());
+    
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.username) IN (:...usernames)', { usernames: lowerCaseUsernames })
+      .select(['user.id', 'user.username', 'user.full_name']) // Only grab required metadata
+      .getMany();
   }
 }

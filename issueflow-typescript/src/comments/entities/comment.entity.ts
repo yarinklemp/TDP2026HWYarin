@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn, CreateDateColumn, JoinTable, ManyToMany } from 'typeorm';
 import { Ticket } from '../../tickets/entities/ticket.entity';
 import { User } from '../../users/entities/user.entity';
 
@@ -32,4 +32,8 @@ export class Comment {
   // Fulfills the requirement: "Two users can't edit a comment in the same time"
   @VersionColumn()
   version: number; 
+
+  @ManyToMany(() => User)
+  @JoinTable({ name: 'comment_mentions' }) // This automatically creates the junction table
+  mentionedUsers: User[];
 }

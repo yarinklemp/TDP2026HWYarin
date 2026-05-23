@@ -3,10 +3,14 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth/jwt-auth.guard';
+import { CommentsService } from '../comments/comments.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly commentService: CommentsService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -24,6 +28,12 @@ export class UsersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/mentions')
+  getMentions(@Param('id') id: string) {
+    return this.commentService.findMentionsForUser(+id);
   }
 
   @UseGuards(JwtAuthGuard)
