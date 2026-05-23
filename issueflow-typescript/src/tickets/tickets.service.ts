@@ -88,7 +88,7 @@ export class TicketsService {
         where: {
           assigneeId: dev.id,
           projectId: projectId,
-          status: Not(TicketStatus.DONE),
+          status: Not(TicketStatus.DONE),  // Done tickets don't count towards workload
         },
       });
 

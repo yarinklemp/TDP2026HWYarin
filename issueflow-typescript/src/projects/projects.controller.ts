@@ -1,13 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards , Request, ForbiddenException} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards , Request, ForbiddenException, NotFoundException} from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth/jwt-auth.guard';
+import { TicketsService } from '../tickets/tickets.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(
+    private readonly projectsService: ProjectsService,
+    private readonly ticketsService: TicketsService
+  ) {}
 
   @Post()
   create(@Body() createProjectDto: CreateProjectDto, @Request() req) {
@@ -17,6 +21,15 @@ export class ProjectsController {
       throw new ForbiddenException('You do not have permission to create a project for this owner');
     }
     return this.projectsService.create(createProjectDto);
+  }
+
+  @Get('id/workload')
+  async getProjectWorkload(@Param('id') id: string) { //Specific endpoint specified in section 3.8 of the requierments
+    const project = await this.projectsService.findOne(+id);
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+    return this.ticketsService.getProjectWorkload(+id);
   }
 
   @Get()

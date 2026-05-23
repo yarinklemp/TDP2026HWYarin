@@ -40,4 +40,22 @@ Or, if you dont want to save DB state:
     }
     Only the owner themselfs or an admin can create a project attached to a user.
 
-    
+#### Ticket regestry
+    Requiers authentication. Supports creating, retrieving, modifing and deleting projects, with the coresponding POST, GET, PATCH, DELETE commands. Tickets are linked to a project and to a user. If user (=assignee) not provided, the system chooses automaticly the developer with the lowest workload.
+    A ticket must have the following fields: title, description, statue, priority, type, projectId
+    Status must be one of: TODO, IN_PROGRESS, IN_REVIEW, DON
+    Priority must be one of: LOW, MEDIUM, HIGH, CRITICAL.
+    Type must be one of: BUG, FEATURE, TECHNICAL.
+    Ticket progresion must follow the lifecycle: TODO → IN_PROGRESS → IN_REVIEW → DONE. No backward transitions, no updates when done, no skiping transitions (TODO -> DONE not allowed!)
+    json example:
+    {
+      "title": "This is a ticket",
+      "description": "It has a specific project conected to it",
+      "status": "TODO",
+      "priority": "HIGH",
+      "type": "FEATURE",
+      "projectId": 1,
+      "assigneeId": 1
+    }
+
+

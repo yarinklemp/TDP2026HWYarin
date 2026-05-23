@@ -4,6 +4,7 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth/jwt-auth.guard';
 
+
 @UseGuards(JwtAuthGuard)
 @Controller('tickets')
 export class TicketsController {
