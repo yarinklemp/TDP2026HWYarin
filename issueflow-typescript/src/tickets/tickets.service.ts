@@ -4,9 +4,11 @@ import { Repository, Not, LessThan } from 'typeorm';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
-import { TicketStatus, TicketPriority } from './enums/ticket.enum';
+import { TicketStatus, TicketPriority, TicketType } from './enums/ticket.enum';
 import { UsersService } from '../users/users.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { parse } from 'csv-parse/sync';
+import { stringify } from 'csv-stringify/sync';
 
 
 @Injectable()
@@ -261,4 +263,64 @@ export class TicketsService {
 
     return { message: 'Dependency on Ticket #${blockerId} removed.' }; 
   }
+
+  async exportTickets(projectId: number): Promise<string> {
+    const tickets = await this.findAll(projectId);
+
+    const data = tickets.map(t => ({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      status: t.status,
+      priority: t.priority,
+      type: t.type,
+      assigneeId: t.assigneeId || '', // Leave blank if unassigned
+    }));
+
+    return stringify(data, { header: true });
+  }
+
+  async importTickets(projectId: number, fileBuffer: Buffer) {
+    const records = parse(fileBuffer, {  // Parse csv to json
+      columns: true, 
+      skip_empty_lines: true 
+    });
+
+    let created = 0;
+    let failed = 0;
+    const errors = [];
+
+    // Loop through each row and create the ticket
+    for (let i = 0; i < records.length; i++) {
+      const row = records[i];
+      try {
+        // 1. Build the DTO manually. 
+        // CRITICAL: We intentionally IGNORE row.id to prevent database collisions!
+        const createTicketDto: CreateTicketDto = {
+          title: row.title,
+          description: row.description,
+          status: row.status as TicketStatus,
+          priority: row.priority as TicketPriority,
+          type: row.type as TicketType,
+          projectId: projectId, // Use the ID passed in the form data
+          assigneeId: row.assigneeId ? Number(row.assigneeId) : undefined,
+        };
+
+        // 2. Call your existing create method! 
+        // Bonus: If the CSV row leaves assigneeId blank, this will automatically 
+        // trigger your workload balancing algorithm from earlier!
+        await this.create(createTicketDto);
+        created++;
+
+      } catch (error) {
+        failed++;
+        // Add +2 to index (row 0 is header, array is 0-indexed) to give accurate Excel row numbers
+        errors.push(`Row ${i + 2}: ${error.message}`); 
+      }
+    }
+
+    // Return the summary object exactly as requested by the assignment
+    return { created, failed, errors };
+  }
+
 }

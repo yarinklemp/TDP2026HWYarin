@@ -1,14 +1,42 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, BadRequestException, Header, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
 
 
 @UseGuards(JwtAuthGuard)
 @Controller('tickets')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
+
+  @Get('export')
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename="tickets-export.csv"')
+  exportTickets(@Query('projectId') projectId: string) {
+    if (!projectId) {
+      throw new BadRequestException('You must provide a projectId query parameter.');
+    }
+    return this.ticketsService.exportTickets(+projectId);
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file')) // Tells NestJS to look for a multipart field named 'file'
+  importTickets(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('projectId') projectId: string
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded. Please provide a CSV file under the "file" field.');
+    }
+    if (!projectId) {
+      throw new BadRequestException('You must provide a "projectId" form field.');
+    }
+
+    return this.ticketsService.importTickets(+projectId, file.buffer);
+  }
 
   @Post(':id/dependencies')
   addDependency(
@@ -21,13 +49,13 @@ export class TicketsController {
     return this.ticketsService.addDependency(+ticketId, blockerId);
   }
 
-  // GET /tickets/{ticketId}/dependencies [cite: 73]
+  
   @Get(':id/dependencies')
   getDependencies(@Param('id') ticketId: string) {
     return this.ticketsService.getDependencies(+ticketId);
   }
 
-  // DELETE /tickets/{ticketId}/dependencies/{blockerId} [cite: 74]
+  
   @Delete(':id/dependencies/:blockerId')
   removeDependency(
     @Param('id') ticketId: string,
@@ -35,7 +63,7 @@ export class TicketsController {
   ) {
     return this.ticketsService.removeDependency(+ticketId, +blockerId);
   }
-  
+
   @Post()
   create(@Body() createTicketDto: CreateTicketDto) {
     return this.ticketsService.create(createTicketDto);
