@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn, ManyToMany, JoinTable } from 'typeorm';
 import { Project } from '../../projects/entities/project.entity';
 import { User } from '../../users/entities/user.entity';
 import { TicketStatus, TicketPriority, TicketType } from '../enums/ticket.enum';
@@ -48,4 +48,12 @@ export class Ticket {
   // Handles the simultaneous update constraint automatically!
   @VersionColumn()
   version: number;
+
+  @ManyToMany(() => Ticket)
+  @JoinTable({
+    name: 'ticket_dependencies', // Explicitly name the junction table
+    joinColumn: { name: 'ticketId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'blockerId', referencedColumnName: 'id' },
+  })
+  blockedBy: Ticket[];
 }

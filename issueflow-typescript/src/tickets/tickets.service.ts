@@ -62,9 +62,27 @@ export class TicketsService {
         );
       }
     }
+
+    if (updateTicketDto.status === TicketStatus.DONE) {
+      // We must fetch the ticket again with its dependencies loaded
+      const ticketWithDeps = await this.ticketsRepository.findOne({
+        where: { id },
+        relations: ['blockedBy'],
+        });
+      const hasUnresolvedBlockers = ticketWithDeps.blockedBy.some(
+        (blocker) => blocker.status !== TicketStatus.DONE
+        );
+      if (hasUnresolvedBlockers) {
+        throw new BadRequestException(
+          'Cannot mark this ticket as DONE because it has unresolved dependencies.'
+        );
+      }
+    }
+
     if (updateTicketDto.priority && updateTicketDto.priority !== ticket.priority) {
       ticket.is_overdue = false; // Reset the flag
     }
+
     Object.assign(ticket, updateTicketDto);
     return this.ticketsRepository.save(ticket);
   }
@@ -155,6 +173,92 @@ export class TicketsService {
         await this.ticketsRepository.save(ticket);
       }
     }
+  }
 
+  private async checkCircularDependency(currentBlockerId: number, targetTicketId: number, visited: Set<number> = new Set()): Promise<boolean> { // Recursive function to check for cycles
+    if (currentBlockerId === targetTicketId) {
+      return true; 
+    }
+
+    if (visited.has(currentBlockerId)) {
+      return false; 
+    }
+    visited.add(currentBlockerId);
+
+    const ticket = await this.ticketsRepository.findOne({
+      where: { id: currentBlockerId },
+      relations: ['blockedBy'],
+    });
+
+    if (!ticket || !ticket.blockedBy || ticket.blockedBy.length === 0) {
+      return false; // Dead end, no cycle here
+    }
+
+    for (const deepBlocker of ticket.blockedBy) {
+      const hasCycle = await this.checkCircularDependency(deepBlocker.id, targetTicketId, visited);
+      if (hasCycle) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async addDependency(ticketId: number, blockerId: number) {
+    const ticket = await this.findOne(ticketId);
+    const blocker = await this.findOne(blockerId);
+    if (!ticket || !blocker) {
+      throw new NotFoundException('Ticket or blocker ticket not found');
+    }
+    if (ticket.projectId !== blocker.projectId){
+      throw new BadRequestException('Both tickets must belong to the same project');
+    }
+    if (ticket.id == blocker.id) {
+      throw new BadRequestException('A ticket cannot depend on itself');
+    }
+    const createsCycle = await this.checkCircularDependency(blockerId, ticketId);
+    if (createsCycle) {
+      throw new BadRequestException(
+        `Cannot add dependency: Making Ticket #${ticketId} wait on Ticket #${blockerId} would create a circular dependency (soft lock).`
+      );
+    }
+
+    const ticketWithDeps = await this.ticketsRepository.findOne({
+      where: { id: ticketId },
+      relations: ['blockedBy'],
+    });
+
+    const isAlreadyBlocked = ticketWithDeps.blockedBy.some((t) => t.id === blockerId);
+    if (!isAlreadyBlocked) {
+      ticketWithDeps.blockedBy.push(blocker);
+      await this.ticketsRepository.save(ticketWithDeps);
+    }
+
+    return { message: `Ticket #${ticketId} is now blocked by Ticket #${blockerId}` };
+  }
+
+  async getDependencies(ticketId: number) {
+    const ticket = await this.ticketsRepository.findOne({
+      where: { id: ticketId },
+      relations: ['blockedBy'], // Fetches the actual blocker ticket objects
+    });
+
+    if (!ticket) throw new NotFoundException(`Ticket #${ticketId} not found`);
+
+    return ticket.blockedBy; 
+  }
+
+  async removeDependency(ticketId: number, blockerId: number) {
+    const ticket = await this.ticketsRepository.findOne({
+      where: { id: ticketId },
+      relations: ['blockedBy'],
+    });
+
+    if (!ticket) throw new NotFoundException(`Ticket #${ticketId} not found`);
+
+    // Filter out the specific blocker ID
+    ticket.blockedBy = ticket.blockedBy.filter((t) => t.id !== blockerId);
+    await this.ticketsRepository.save(ticket);
+
+    return { message: 'Dependency on Ticket #${blockerId} removed.' }; 
   }
 }
