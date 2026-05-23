@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsNumber, IsOptional, IsDateString } from 'class-validator';
 import { TicketStatus, TicketPriority, TicketType } from '../enums/ticket.enum';
 
 export class CreateTicketDto {
@@ -27,4 +27,8 @@ export class CreateTicketDto {
   @IsNumber()
   @IsOptional()
   assigneeId?: number;
+
+  @IsDateString()
+  @IsOptional()
+  dueDate?: string;
 }

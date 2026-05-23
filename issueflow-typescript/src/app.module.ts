@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [TypeOrmModule.forRoot({
@@ -22,6 +24,8 @@ import { TicketsModule } from './tickets/tickets.module';
     AuthModule,
     ProjectsModule,
     TicketsModule,
+    ScheduleModule.forRoot(),
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

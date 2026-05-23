@@ -39,6 +39,12 @@ export class Ticket {
   @Column({ nullable: true })
   assigneeId: number;
 
+  @Column({ type : 'timestamp', nullable: true })
+  dueDate: Date;
+
+  @Column({ type: 'boolean', default: false })
+  is_overdue: boolean;
+
   // Handles the simultaneous update constraint automatically!
   @VersionColumn()
   version: number;

@@ -41,12 +41,14 @@ Or, if you dont want to save DB state:
     Only the owner themselfs or an admin can create a project attached to a user.
 
 #### Ticket regestry
-    Requiers authentication. Supports creating, retrieving, modifing and deleting projects, with the coresponding POST, GET, PATCH, DELETE commands. Tickets are linked to a project and to a user. If user (=assignee) not provided, the system chooses automaticly the developer with the lowest workload.
-    A ticket must have the following fields: title, description, statue, priority, type, projectId
+    Requiers authentication. Supports creating, retrieving, modifing and deleting tickets, with the coresponding POST, GET, PATCH, DELETE commands. Tickets are linked to a project and to a user. If user (=assignee) not provided, the system chooses automaticly the developer with the lowest workload.
+    A ticket must have the following fields: title, description, statue, priority, type, projectId, and may have assigneeId, dueDate
     Status must be one of: TODO, IN_PROGRESS, IN_REVIEW, DON
     Priority must be one of: LOW, MEDIUM, HIGH, CRITICAL.
     Type must be one of: BUG, FEATURE, TECHNICAL.
     Ticket progresion must follow the lifecycle: TODO → IN_PROGRESS → IN_REVIEW → DONE. No backward transitions, no updates when done, no skiping transitions (TODO -> DONE not allowed!)
+    Ticked passed it's due date would start climing the priority. Once reached critical, it is flaged as overdue.
+    Can only get tickets from a specific project, by sendig a GET /tickets?projectId=<id here>
     json example:
     {
       "title": "This is a ticket",
@@ -58,4 +60,13 @@ Or, if you dont want to save DB state:
       "assigneeId": 1
     }
 
-
+#### Comment regestry
+    Requiers authentication. Supports creating, retrieving, modifing and deleting comments, with the coresponding POST, GET, PATCH, DELETE commands. Comments are linked to a ticket and a user.
+    A comment must have the following fields: content, authorId, ticketId
+    Can only get comments from a specific ticket, by sendig a GET /comments?ticketId=<id here>
+    json example:
+    {
+        "content": "yooooo",
+        "authorId": 1,
+         "ticketId": 1
+    }

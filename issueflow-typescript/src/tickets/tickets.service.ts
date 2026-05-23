@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { Repository, Not, LessThan } from 'typeorm';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
-import { TicketStatus } from './enums/ticket.enum';
+import { TicketStatus, TicketPriority } from './enums/ticket.enum';
 import { UsersService } from '../users/users.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 
 @Injectable()
@@ -60,6 +61,9 @@ export class TicketsService {
           `Invalid status transition from ${ticket.status} to ${updateTicketDto.status}.`
         );
       }
+    }
+    if (updateTicketDto.priority && updateTicketDto.priority !== ticket.priority) {
+      ticket.is_overdue = false; // Reset the flag
     }
     Object.assign(ticket, updateTicketDto);
     return this.ticketsRepository.save(ticket);
@@ -121,5 +125,36 @@ export class TicketsService {
 
     // Sort ascending by count
     return workload.sort((a, b) => a.openTicketCount - b.openTicketCount);
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE) // Every minute is for testing; change to EVERY_HOUR for production
+  async handleTicketEscaltion() {
+    const overdueTickets = await this.ticketsRepository.find({
+      where: {
+        status: Not(TicketStatus.DONE),
+        dueDate: LessThan(new Date()),
+      },
+    });
+
+    for (const ticket of overdueTickets) {
+      let needUpdate = false;
+      if (ticket.priority === TicketPriority.LOW) {
+        ticket.priority = TicketPriority.MEDIUM;
+        needUpdate = true;
+      } else if (ticket.priority === TicketPriority.MEDIUM) {
+        ticket.priority = TicketPriority.HIGH;
+        needUpdate = true;
+      } else if (ticket.priority === TicketPriority.HIGH) {
+        ticket.priority = TicketPriority.CRITICAL;
+        needUpdate = true;
+      } else if (ticket.priority === TicketPriority.CRITICAL && !ticket.is_overdue) {
+        ticket.is_overdue = true; 
+        needUpdate = true;
+      }
+      if (needUpdate) {
+        await this.ticketsRepository.save(ticket);
+      }
+    }
+
   }
 }
