@@ -20,15 +20,16 @@ export class UsersService {
     const { password, ...data } = createUserDto;
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = this.usersRepository.create({...data, password: hashedPassword,});
+    const user = await this.usersRepository.save(newUser);
     this.auditLogsService.log({
-      entityName: 'User',
-      entityId: newUser.id,
+      entityName: 'USER',
+      entityId: user.id,
       action: 'CREATE',
       actorId: null, // Indicates the system did it
       oldValues: null,
-      newValues: newUser,
+      newValues: user,
     });
-    return await this.usersRepository.save(newUser);
+    return user
   }
 
   async findAll() {
@@ -52,7 +53,7 @@ export class UsersService {
     await this.usersRepository.update(id, updateUserDto);
     const updatedUser = await this.findOne(id);
     this.auditLogsService.log({
-      entityName: 'User',
+      entityName: 'USER',
       entityId: updatedUser.id,
       action: 'UPDATE',
       actorId: actorId, 
@@ -72,7 +73,7 @@ export class UsersService {
       throw new NotFoundException('User with ID ${id} not found');
     }
     this.auditLogsService.log({
-      entityName: 'User',
+      entityName: 'USER',
       entityId: userToDelete.id,
       action: 'DELETE',
       actorId: actorId,

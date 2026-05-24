@@ -78,3 +78,6 @@ Tickets can depend on each other. By using  POST /tickets/{ticketId}/dependencie
     GET /tickets/ticketId/attachments returns all attachments connected to ticketId ticket. Note that this returns metadata only.
     GET /tickets/attachments/id returns a particular attachment
     
+#### Audit logs
+    As per the requeirments, every action that changes the state of the internal DB gets audited in a special log. The log can be accsessed only by admins, at this endpoint:
+    GET /audit-logs/query, where query is replaced by the filters that you require.

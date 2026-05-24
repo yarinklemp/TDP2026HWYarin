@@ -34,15 +34,16 @@ export class TicketsService {
       finalAssigneeId = await this.calculateLeastLoadedDeveloper(createTicketDto.projectId);
     }
     const ticket = this.ticketsRepository.create({...createTicketDto, assigneeId: finalAssigneeId });
+    const savedTicket = await this.ticketsRepository.save(ticket);
     this.auditLogsService.log({
       entityName: 'Ticket',
-      entityId: ticket.id,
+      entityId: savedTicket.id,
       action: 'CREATE',
       actorId: actorId, // Even if there is random assignment, the actor is stil the one who initiated the creation
       oldValues: null,
-      newValues: ticket,
+      newValues: savedTicket,
     });
-    return this.ticketsRepository.save(ticket);
+    return savedTicket;
   }
 
   async findAll(project_id: number) {
@@ -231,14 +232,14 @@ export class TicketsService {
         needUpdate = true;
       }
       if (needUpdate) {
-        await this.ticketsRepository.save(ticket);
+        const savedTicket = await this.ticketsRepository.save(ticket);
         this.auditLogsService.log({
           entityName: 'Ticket',
-          entityId: ticket.id,
+          entityId: savedTicket.id,
           action: 'UPDATE',
           actorId: null, // Passed from the controller
           oldValues: oldState,
-          newValues: ticket,
+          newValues: savedTicket,
         });
       }
     }
@@ -300,17 +301,16 @@ export class TicketsService {
     const isAlreadyBlocked = ticketWithDeps.blockedBy.some((t) => t.id === blockerId);
     if (!isAlreadyBlocked) {
       ticketWithDeps.blockedBy.push(blocker);
-      await this.ticketsRepository.save(ticketWithDeps);
-    }
-
-    this.auditLogsService.log({
-      entityName: 'Ticket',
-      entityId: ticketWithDeps.id,
-      action: 'ADD_DEPENDENCY',
-      actorId: actorId, // Passed from the controller
-      oldValues: oldState,
-      newValues: ticketWithDeps,
-    });
+      const savedTicket = await this.ticketsRepository.save(ticketWithDeps);
+          this.auditLogsService.log({
+            entityName: 'Ticket',
+            entityId: savedTicket.id,
+            action: 'ADD_DEPENDENCY',
+            actorId: actorId, // Passed from the controller
+            oldValues: oldState,
+            newValues: savedTicket,
+         });
+    } 
 
     return { message: `Ticket #${ticketId} is now blocked by Ticket #${blockerId}` };
   }
@@ -337,15 +337,15 @@ export class TicketsService {
 
     // Filter out the specific blocker ID
     ticket.blockedBy = ticket.blockedBy.filter((t) => t.id !== blockerId);
-    await this.ticketsRepository.save(ticket);
+    const savedTicket = await this.ticketsRepository.save(ticket);
 
     this.auditLogsService.log({
       entityName: 'Ticket',
-      entityId: ticket.id,
+      entityId: savedTicket.id,
       action: 'REMOVE_DEPENDENCY',
       actorId: actorId,
       oldValues: oldState,
-      newValues: ticket,
+      newValues: savedTicket,
     });
 
     return { message: 'Dependency on Ticket #${blockerId} removed.' }; 

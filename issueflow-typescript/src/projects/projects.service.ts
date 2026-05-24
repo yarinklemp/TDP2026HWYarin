@@ -22,15 +22,16 @@ export class ProjectsService {
       throw new NotFoundException(`User with ID ${createProjectDto.ownerId} not found`);
     }
     const project = this.projectsRepository.create(createProjectDto);
+    const savedProject = await this.projectsRepository.save(project);
     this.auditLogsService.log({
       entityName: 'Project',
-      entityId: project.id,
+      entityId: savedProject.id,
       action: 'CREATE',
       actorId: actorId, // Passed from the controller
       oldValues: null,
-      newValues: project,
+      newValues: savedProject,
     }); 
-    return this.projectsRepository.save(project);
+    return savedProject;
   }
 
   findAll() {
