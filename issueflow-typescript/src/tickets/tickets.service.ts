@@ -39,7 +39,7 @@ export class TicketsService {
       entityId: ticket.id,
       action: 'CREATE',
       actorId: actorId, // Even if there is random assignment, the actor is stil the one who initiated the creation
-      oldValues: {},
+      oldValues: null,
       newValues: ticket,
     });
     return this.ticketsRepository.save(ticket);
@@ -121,7 +121,7 @@ export class TicketsService {
       action: 'DELETE',
       actorId: actorId, // Passed from the controller
       oldValues: ticket,
-      newValues: {},
+      newValues: null,
     });
     return this.ticketsRepository.softRemove(ticket);
   }
@@ -148,7 +148,7 @@ export class TicketsService {
       entityId: restoredTicket.id,
       action: 'RESTORE',
       actorId: actorId, // Passed from the controller
-      oldValues: {},
+      oldValues: null,
       newValues: restoredTicket,
     });
     

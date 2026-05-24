@@ -25,9 +25,9 @@ export class ProjectsService {
     this.auditLogsService.log({
       entityName: 'Project',
       entityId: project.id,
-      action: 'Create',
+      action: 'CREATE',
       actorId: actorId, // Passed from the controller
-      oldValues: {},
+      oldValues: null,
       newValues: project,
     }); 
     return this.projectsRepository.save(project);
@@ -75,7 +75,7 @@ export class ProjectsService {
       action: 'DELETE',
       actorId: actorId,
       oldValues: project,
-      newValues: {},
+      newValues: null,
     });
     return this.projectsRepository.softRemove(project);
   }
@@ -99,7 +99,7 @@ export class ProjectsService {
       entityId: project.id,
       action: 'RESTORE',
       actorId: actorId,
-      oldValues: {},
+      oldValues: null,
       newValues: project,
     });
     return { message: `Project #${id} successfully restored.` };

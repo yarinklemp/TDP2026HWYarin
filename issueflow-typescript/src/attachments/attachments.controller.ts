@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Res, BadRequestException, UseInterceptors, UseGuards, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Res, BadRequestException, UseInterceptors, UseGuards, UploadedFile, Request } from '@nestjs/common';
 import { AttachmentsService } from './attachments.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
@@ -12,19 +12,20 @@ export class AttachmentsController {
 
   @Post(':ticketId/attachments')
   @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize : 10 * 1024 * 1024 }, 
-    fileFilter: (req, file, cb) => { const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf', 'text/plain'];
-      if (!allowedTypes.includes(file.mimetype)) {
-        return cb(new BadRequestException(`File type ${file.mimetype} is not allowed.`), false);
+      limits: { fileSize : 10 * 1024 * 1024 }, 
+      fileFilter: (req, file, cb) => { 
+        const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf', 'text/plain'];
+        if (!allowedTypes.includes(file.mimetype)) {
+          return cb(new BadRequestException(`File type ${file.mimetype} is not allowed.`), false);
+        }
+        cb(null, true);
       }
-      cb(null, true);
-    }
-  })) 
-  async uploadFile(@Param('ticketId') ticketId: string, @UploadedFile() file: Express.Multer.File) {
+    })) 
+  async uploadFile(@Param('ticketId') ticketId: string, @UploadedFile() file: Express.Multer.File, @Request() req) {
     if (!file) {
       throw new BadRequestException('File is missing or exceeded the 10 MB limit.');
     }
-    return this.attachmentsService.saveAttachment(+ticketId, file);
+    return this.attachmentsService.saveAttachment(+ticketId, file, req.user.sub);
   }
 
 

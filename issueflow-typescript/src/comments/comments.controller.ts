@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { TicketsService } from '../tickets/tickets.service';
 
+
 @UseGuards(JwtAuthGuard)
 @Controller('comments')
 export class CommentsController {
@@ -22,7 +23,7 @@ export class CommentsController {
       throw new ForbiddenException('You can only post comments under your own user ID.');
     }
 
-    return this.commentsService.create(createCommentDto);
+    return this.commentsService.create(createCommentDto, req.user.sub);
   }
 
   @Get()
@@ -48,7 +49,7 @@ export class CommentsController {
       throw new ForbiddenException('You do not have permission to edit this comment.');
     }
 
-    return this.commentsService.update(+id, updateCommentDto);
+    return this.commentsService.update(+id, updateCommentDto, req.user.sub);
   }
 
   @Delete(':id')
@@ -62,6 +63,6 @@ export class CommentsController {
       throw new ForbiddenException('You do not have permission to delete this comment.');
     }
 
-    return this.commentsService.remove(+id);
+    return this.commentsService.remove(+id, req.user.sub);
   }
 }

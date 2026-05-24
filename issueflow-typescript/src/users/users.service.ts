@@ -25,7 +25,7 @@ export class UsersService {
       entityId: newUser.id,
       action: 'CREATE',
       actorId: null, // Indicates the system did it
-      oldValues: {},
+      oldValues: null,
       newValues: newUser,
     });
     return await this.usersRepository.save(newUser);
@@ -77,7 +77,7 @@ export class UsersService {
       action: 'DELETE',
       actorId: actorId,
       oldValues: userToDelete,
-      newValues: {},
+      newValues: null,
     });
     return { message: 'User with ID #${id} has been deleted' };
   }
