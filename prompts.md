@@ -39,12 +39,8 @@ key prompts:
     For each test, write above it in a comment what it checks. Write as many tests as you can come up with, do not summerize or write insufficient tests 
 
 
-
-
-
-
-
-
-
-
+Full prompts can be found in:
+https://gemini.google.com/share/30cb39e00008
+https://gemini.google.com/share/ba0b2cc46ffb
+https://gemini.google.com/share/f5c2fc1086ba
 

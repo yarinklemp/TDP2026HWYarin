@@ -1,5 +1,5 @@
 # Envierment and dependencies
-This project was developed in VSCode, with the Docker and Thunder Client extentions. Additional, yet not neccessary extentions are ESLint and Prettier. Before booting the project, make sure you have Docker and Node.js installed. Open the terminal in <issueflow-typescript> and run <npm install>. Besides that, run these installs:
+This project was developed in VSCode, with the Docker and Thunder Client extentions. Additional, yet not neccessary extentions are ESLint and Prettier. Before booting the project, make sure you have Docker and Node.js installed. Open the terminal in issueflow-typescript and run npm install. Besides that, run these installs:
     npm install class-validator class-transformer
     npm install @nestjs/schedule
     npm install csv-parse csv-stringify
@@ -23,7 +23,7 @@ Or, if you dont want to save DB state:
 'docker compose down'
 
 # Testing
-To run tests on the system, make sure that the server isn't running (by hitting ctr+c in the terminal) and then run <npm run test:e2e>.
+To run tests on the system, make sure that the server isn't running (by hitting ctr+c in the terminal) and then run npm run test:e2e.
 Note that you would get a console error despite passing the test - that is because the loging is async functionality, and thus gets interupted when the connection terminates abruptly.
 
 ## Services details 
