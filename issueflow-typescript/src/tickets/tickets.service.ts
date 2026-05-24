@@ -15,8 +15,8 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 @Injectable()
 export class TicketsService {
   private readonly allowedTransitions = {
-    [TicketStatus.TODO]: [TicketStatus.IN_PROGRESS],
-    [TicketStatus.IN_PROGRESS]: [TicketStatus.IN_REVIEW],
+    [TicketStatus.TODO]: [TicketStatus.IN_PROGRESS, TicketStatus.IN_REVIEW, TicketStatus.DONE],
+    [TicketStatus.IN_PROGRESS]: [TicketStatus.IN_REVIEW, TicketStatus.DONE],
     [TicketStatus.IN_REVIEW]: [TicketStatus.DONE],
     [TicketStatus.DONE]: [], 
   };

@@ -29,15 +29,16 @@ export class CommentsService {
     if (mentionedUsernames.length > 0) {
       comment.mentionedUsers = await this.usersService.findByUsernamesIgnoreCase(mentionedUsernames);
     }
+    const savedComment = await this.commentsRepository.save(comment);
     this.auditLogsService.log({
       entityName: 'Comment',
-      entityId: comment.id,
+      entityId: savedComment.id,
       action: 'CREATE',
       actorId: actorId, // Indicates the system did it
       oldValues: null,
       newValues: comment,
     })
-    return this.commentsRepository.save(comment);
+    return savedComment;
   }
 
   async findAllByTicket(ticketId: number) {
