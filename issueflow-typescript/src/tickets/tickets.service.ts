@@ -38,7 +38,7 @@ export class TicketsService {
       entityName: 'Ticket',
       entityId: ticket.id,
       action: 'CREATE',
-      actorId: actorId, // Passed from the controller
+      actorId: actorId, // Even if there is random assignment, the actor is stil the one who initiated the creation
       oldValues: {},
       newValues: ticket,
     });

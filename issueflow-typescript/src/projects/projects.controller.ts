@@ -26,7 +26,7 @@ export class ProjectsController {
     if (req.user.role !== 'ADMIN') {
       throw new ForbiddenException('Only administrators can restore deleted projects.');
     }
-    return this.projectsService.restore(+id);
+    return this.projectsService.restore(+id, req.user.id);
   }
 
   @Post()
@@ -36,7 +36,7 @@ export class ProjectsController {
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException('You do not have permission to create a project for this owner');
     }
-    return this.projectsService.create(createProjectDto);
+    return this.projectsService.create(createProjectDto, req.user.id);
   }
 
   @Get('id/workload')
@@ -66,7 +66,7 @@ export class ProjectsController {
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException('You do not have permission to update this project for this owner');
     }
-    return this.projectsService.update(+id, updateProjectDto);
+    return this.projectsService.update(+id, updateProjectDto, req.user.id);
   }
 
   @Delete(':id')
@@ -77,6 +77,6 @@ export class ProjectsController {
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException('You do not have permission to delete this project for this owner');
     }
-    return this.projectsService.remove(+id);
+    return this.projectsService.remove(+id, req.user.id);
   }
 }
