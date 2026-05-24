@@ -5,20 +5,29 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
 import * as bcrypt from 'bcrypt';
-import {UserRole} from './entities/user.entity';
+import { UserRole } from './entities/user.entity';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 
 @Injectable()
 export class UsersService {
   constructor(
-      @InjectRepository(User)
-      private usersRepository: Repository<User>
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+    private auditLogsService: AuditLogsService
   ) {}
-  async create(createUserDto: CreateUserDto) {
-  
+  async create(createUserDto: CreateUserDto) { 
     const { password, ...data } = createUserDto;
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = this.usersRepository.create({...data, password: hashedPassword,});
+    this.auditLogsService.log({
+      entityName: 'User',
+      entityId: newUser.id,
+      action: 'CREATE',
+      actorId: null, // Indicates the system did it
+      oldValues: {},
+      newValues: newUser,
+    });
     return await this.usersRepository.save(newUser);
   }
 
@@ -35,16 +44,41 @@ export class UsersService {
   }
 
   
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto, actorId: number) {
+    const existingUser = await this.findOne(id);
+    if (!existingUser) {
+      throw new NotFoundException('User with ID ${id} not found');
+    }
     await this.usersRepository.update(id, updateUserDto);
-    return this.findOne(id);
+    const updatedUser = await this.findOne(id);
+    this.auditLogsService.log({
+      entityName: 'User',
+      entityId: updatedUser.id,
+      action: 'UPDATE',
+      actorId: actorId, 
+      oldValues: existingUser,
+      newValues: updatedUser,
+    });
+    return updatedUser;
   }
 
-  async remove(id: number) {
+  async remove(id: number, actorId: number) {
+    const userToDelete = await this.findOne(id);
+    if (!userToDelete) {
+      throw new NotFoundException('User with ID ${id} not found');
+    }
     const result = await this.usersRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException('User with ID ${id} not found');
     }
+    this.auditLogsService.log({
+      entityName: 'User',
+      entityId: userToDelete.id,
+      action: 'DELETE',
+      actorId: actorId,
+      oldValues: userToDelete,
+      newValues: {},
+    });
     return { message: 'User with ID #${id} has been deleted' };
   }
 
