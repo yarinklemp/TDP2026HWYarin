@@ -59,6 +59,7 @@ Or, if you dont want to save DB state:
       "projectId": 1,
       "assigneeId": 1
     }
+Tickets can depend on each other. By using  POST /tickets/{ticketId}/dependencies with json {"blockedBy": dependentId } blocks ticketId's transition to DONE if depententId is not done.  GET /tickets/{ticketId}/dependencies returns all tickets this ticket is blocked by, and DELETE /tickets/{ticketId}/dependencies/{blockerId} removes a dependency.
 
 #### Comment regestry
     Requiers authentication. Supports creating, retrieving, modifing and deleting comments, with the coresponding POST, GET, PATCH, DELETE commands. Comments are linked to a ticket and a user.
@@ -70,3 +71,10 @@ Or, if you dont want to save DB state:
         "authorId": 1,
          "ticketId": 1
     }
+
+#### Attachments regestry
+    Tickets have attachments, which are files of under 10MB of the type: image/png, image/jpeg, application/pdf, text/plain. Attempting to upload a file of another type or bigger size would result in an error. Since they are directly connected to tickets, they are part of the tickets hierarchy. Endpoints are:
+    POST /tickets/ticketId/attachments uploads an attachment to ticketId ticket
+    GET /tickets/ticketId/attachments returns all attachments connected to ticketId ticket. Note that this returns metadata only.
+    GET /tickets/attachments/id returns a particular attachment
+    
