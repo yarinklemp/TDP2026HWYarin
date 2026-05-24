@@ -6,11 +6,13 @@ import { TypeOrmModule } from '@nestjs/typeorm/dist/typeorm.module';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { ProjectsModule } from '../projects/projects.module';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Ticket]),
     AuthModule,
+    AuditLogsModule,
     forwardRef(() => UsersModule),
     forwardRef(() => ProjectsModule),
   ],

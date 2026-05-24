@@ -9,6 +9,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CommentsModule } from './comments/comments.module';
 import { AttachmentsModule } from './attachments/attachments.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
 
 @Module({
   imports: [TypeOrmModule.forRoot({
@@ -28,6 +29,7 @@ import { AttachmentsModule } from './attachments/attachments.module';
     ScheduleModule.forRoot(),
     CommentsModule,
     AttachmentsModule,
+    AuditLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 
 @Injectable()
@@ -24,14 +25,23 @@ export class TicketsService {
     @InjectRepository(Ticket)
     private ticketsRepository: Repository<Ticket>,
     private usersService: UsersService,
+    private auditLogsService: AuditLogsService,
   ) {}
 
-  async create(createTicketDto: CreateTicketDto) {
+  async create(createTicketDto: CreateTicketDto, actorId: number) {
     let finalAssigneeId = createTicketDto.assigneeId;
     if (!finalAssigneeId) {
       finalAssigneeId = await this.calculateLeastLoadedDeveloper(createTicketDto.projectId);
     }
     const ticket = this.ticketsRepository.create({...createTicketDto, assigneeId: finalAssigneeId });
+    this.auditLogsService.log({
+      entityName: 'Ticket',
+      entityId: ticket.id,
+      action: 'CREATE',
+      actorId: actorId, // Passed from the controller
+      oldValues: {},
+      newValues: ticket,
+    });
     return this.ticketsRepository.save(ticket);
   }
 
@@ -48,8 +58,9 @@ export class TicketsService {
     return ticket;
   }
 
-  async update(id: number, updateTicketDto: UpdateTicketDto) {
+  async update(id: number, updateTicketDto: UpdateTicketDto, actorId: number) {
     const ticket = await this.findOne(id);
+    const oldState = { ...ticket };
 
     // Constraint: Cannot update once DONE
     if (ticket.status === TicketStatus.DONE) {
@@ -86,14 +97,32 @@ export class TicketsService {
     }
 
     Object.assign(ticket, updateTicketDto);
-    return this.ticketsRepository.save(ticket);
+    const updatedTicket = await this.ticketsRepository.save(ticket);
+
+    await this.auditLogsService.log({
+      entityName: 'Ticket',
+      entityId: updatedTicket.id,
+      action: 'UPDATE',
+      actorId: actorId, // Passed from the controller
+      oldValues: oldState,
+      newValues: updatedTicket,
+    });
+    return updatedTicket;
   }
 
-  async remove(id: number) {
+  async remove(id: number, actorId: number) {
     const ticket = await this.ticketsRepository.findOne({ where : { id } });
     if (!ticket) {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
+    this.auditLogsService.log({
+      entityName: 'Ticket',
+      entityId: ticket.id,
+      action: 'DELETE',
+      actorId: actorId, // Passed from the controller
+      oldValues: ticket,
+      newValues: {},
+    });
     return this.ticketsRepository.softRemove(ticket);
   }
 
@@ -107,12 +136,21 @@ export class TicketsService {
     });
   }
 
-  async restore(id: number) {
+  async restore(id: number, actorId: number) {
     const restoreResponse = await this.ticketsRepository.restore(id);
     
     if (restoreResponse.affected === 0) {
       throw new NotFoundException(`Deleted Ticket #${id} not found.`);
     }
+    const restoredTicket = await this.ticketsRepository.findOne({ where: { id }});
+    this.auditLogsService.log({
+      entityName: 'Ticket',
+      entityId: restoredTicket.id,
+      action: 'RESTORE',
+      actorId: actorId, // Passed from the controller
+      oldValues: {},
+      newValues: restoredTicket,
+    });
     
     return { message: `Ticket #${id} successfully restored.` };
   }
@@ -177,6 +215,7 @@ export class TicketsService {
     });
 
     for (const ticket of overdueTickets) {
+      const oldState = { ...ticket };
       let needUpdate = false;
       if (ticket.priority === TicketPriority.LOW) {
         ticket.priority = TicketPriority.MEDIUM;
@@ -193,6 +232,14 @@ export class TicketsService {
       }
       if (needUpdate) {
         await this.ticketsRepository.save(ticket);
+        this.auditLogsService.log({
+          entityName: 'Ticket',
+          entityId: ticket.id,
+          action: 'UPDATE',
+          actorId: null, // Passed from the controller
+          oldValues: oldState,
+          newValues: ticket,
+        });
       }
     }
   }
@@ -225,9 +272,10 @@ export class TicketsService {
     return false;
   }
 
-  async addDependency(ticketId: number, blockerId: number) {
+  async addDependency(ticketId: number, blockerId: number, actorId: number) {
     const ticket = await this.findOne(ticketId);
     const blocker = await this.findOne(blockerId);
+    const oldState = { ...ticket };
     if (!ticket || !blocker) {
       throw new NotFoundException('Ticket or blocker ticket not found');
     }
@@ -255,6 +303,15 @@ export class TicketsService {
       await this.ticketsRepository.save(ticketWithDeps);
     }
 
+    this.auditLogsService.log({
+      entityName: 'Ticket',
+      entityId: ticketWithDeps.id,
+      action: 'ADD_DEPENDENCY',
+      actorId: actorId, // Passed from the controller
+      oldValues: oldState,
+      newValues: ticketWithDeps,
+    });
+
     return { message: `Ticket #${ticketId} is now blocked by Ticket #${blockerId}` };
   }
 
@@ -269,17 +326,27 @@ export class TicketsService {
     return ticket.blockedBy; 
   }
 
-  async removeDependency(ticketId: number, blockerId: number) {
+  async removeDependency(ticketId: number, blockerId: number, actorId: number) {
     const ticket = await this.ticketsRepository.findOne({
       where: { id: ticketId },
       relations: ['blockedBy'],
     });
+    const oldState = { ...ticket };
 
     if (!ticket) throw new NotFoundException(`Ticket #${ticketId} not found`);
 
     // Filter out the specific blocker ID
     ticket.blockedBy = ticket.blockedBy.filter((t) => t.id !== blockerId);
     await this.ticketsRepository.save(ticket);
+
+    this.auditLogsService.log({
+      entityName: 'Ticket',
+      entityId: ticket.id,
+      action: 'REMOVE_DEPENDENCY',
+      actorId: actorId,
+      oldValues: oldState,
+      newValues: ticket,
+    });
 
     return { message: 'Dependency on Ticket #${blockerId} removed.' }; 
   }
@@ -300,7 +367,7 @@ export class TicketsService {
     return stringify(data, { header: true });
   }
 
-  async importTickets(projectId: number, fileBuffer: Buffer) {
+  async importTickets(projectId: number, fileBuffer: Buffer, actorId: number) {
     const records = parse(fileBuffer, {  // Parse csv to json
       columns: true, 
       skip_empty_lines: true 
@@ -329,7 +396,7 @@ export class TicketsService {
         // 2. Call your existing create method! 
         // Bonus: If the CSV row leaves assigneeId blank, this will automatically 
         // trigger your workload balancing algorithm from earlier!
-        await this.create(createTicketDto);
+        await this.create(createTicketDto, actorId);
         created++;
 
       } catch (error) {
