@@ -1,3 +1,10 @@
+# Envierment and dependencies
+This project was developed in VSCode, with the Docker and Thunder Client extentions. Additional, yet not neccessary extentions are ESLint and Prettier. Before booting the project, make sure you have Docker and Node.js installed. Open the terminal in <issueflow-typescript> and run <npm install>. Besides that, run these installs:
+    npm install class-validator class-transformer
+    npm install @nestjs/schedule
+    npm install csv-parse csv-stringify
+    npm install -D @types/multer
+
 # Start the project
 To start the project, navigate to issuflow-typescript, and run:
 'docker compose up -d'
@@ -14,6 +21,10 @@ Then, go to another terminal and write:
 'docker compose stop' 
 Or, if you dont want to save DB state:
 'docker compose down'
+
+# Testing
+To run tests on the system, make sure that the server isn't running (by hitting ctr+c in the terminal) and then run <npm run test:e2e>.
+Note that you would get a console error despite passing the test - that is because the loging is async functionality, and thus gets interupted when the connection terminates abruptly.
 
 ## Services details 
 #### User registry:
@@ -81,3 +92,10 @@ Tickets can depend on each other. By using  POST /tickets/{ticketId}/dependencie
 #### Audit logs
     As per the requeirments, every action that changes the state of the internal DB gets audited in a special log. The log can be accsessed only by admins, at this endpoint:
     GET /audit-logs/query, where query is replaced by the filters that you require.
+
+
+# Personal Note
+I aprritiate your consideration and time, and also this challenge. Prior to this, I had no website-development expirience, and have used this oppertunity to learn. Given more time, I would:
+1) Better protect the endpoints from spofing and abuse - the current system is simplistic and not complete. For example, currently anyone can create an ADMIN user, which is a security oversite. In addition, number of created   resources is not limited, thus the server is vulnarable to attacks.
+2) More comprehancive logic - the current logical systems satisfy the instructions, but are not very complex or comprehencive.
+3) More tests - the current tests cover the basics, but not the rare edge cases or the complex features
