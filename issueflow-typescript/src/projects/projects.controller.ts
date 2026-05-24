@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards , Request, ForbiddenException, NotFoundException} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards , Request, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -12,6 +12,22 @@ export class ProjectsController {
     private readonly projectsService: ProjectsService,
     private readonly ticketsService: TicketsService
   ) {}
+
+  @Get('deleted')
+  async getDeletedProjects(@Request() req) {
+    if (req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can view deleted projects');
+    }
+    return this.projectsService.findTrash();
+  }
+
+  @Patch(':id/restore')
+  restore(@Param('id') id: string, @Request() req) {
+    if (req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only administrators can restore deleted projects.');
+    }
+    return this.projectsService.restore(+id);
+  }
 
   @Post()
   create(@Body() createProjectDto: CreateProjectDto, @Request() req) {

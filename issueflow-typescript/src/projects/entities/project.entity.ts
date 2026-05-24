@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, DeleteDateColumn, CreateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity()
@@ -18,4 +18,10 @@ export class Project {
 
     @Column()
     ownerId: number;
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @DeleteDateColumn()
+    deletedAt: Date;
 }

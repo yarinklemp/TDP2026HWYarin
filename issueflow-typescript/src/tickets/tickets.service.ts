@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, LessThan } from 'typeorm';
+import { Repository, Not, LessThan, IsNull } from 'typeorm';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
@@ -94,7 +94,27 @@ export class TicketsService {
     if (!ticket) {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
-    return this.ticketsRepository.remove(ticket);
+    return this.ticketsRepository.softRemove(ticket);
+  }
+
+  async findTrash(projectId: number) {
+    return await this.ticketsRepository.find({
+      withDeleted: true,
+      where: { 
+        projectId: projectId, 
+        deletedAt: Not(IsNull()) 
+      },
+    });
+  }
+
+  async restore(id: number) {
+    const restoreResponse = await this.ticketsRepository.restore(id);
+    
+    if (restoreResponse.affected === 0) {
+      throw new NotFoundException(`Deleted Ticket #${id} not found.`);
+    }
+    
+    return { message: `Ticket #${id} successfully restored.` };
   }
 
   private async calculateLeastLoadedDeveloper(projectId: number): Promise<number | null> {

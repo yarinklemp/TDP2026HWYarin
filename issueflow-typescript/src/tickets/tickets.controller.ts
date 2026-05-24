@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, BadRequestException, Header, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, BadRequestException, Header, UseInterceptors, UploadedFile, ForbiddenException, Request } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
@@ -11,6 +11,25 @@ import { Express } from 'express';
 @Controller('tickets')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
+
+  @Get('deleted')
+  getDeleted(@Query('projectId') projectId: string, @Request() req) {
+    if (req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only administrators can view deleted tickets.');
+    }
+    if (!projectId) {
+      throw new BadRequestException('You must provide a projectId query parameter (e.g., ?projectId=1).');
+    }
+    return this.ticketsService.findTrash(+projectId);
+  }
+
+  @Patch(':id/restore')
+  restore(@Param('id') id: string, @Request() req) {
+    if (req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only administrators can restore deleted tickets.');
+    }
+    return this.ticketsService.restore(+id);
+  }
 
   @Get('export')
   @Header('Content-Type', 'text/csv')

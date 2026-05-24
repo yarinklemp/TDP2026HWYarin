@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn, ManyToMany, JoinTable, DeleteDateColumn, CreateDateColumn } from 'typeorm';
 import { Project } from '../../projects/entities/project.entity';
 import { User } from '../../users/entities/user.entity';
 import { TicketStatus, TicketPriority, TicketType } from '../enums/ticket.enum';
@@ -56,4 +56,10 @@ export class Ticket {
     inverseJoinColumn: { name: 'blockerId', referencedColumnName: 'id' },
   })
   blockedBy: Ticket[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 }
