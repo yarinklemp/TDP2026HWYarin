@@ -1,12 +1,14 @@
 I used gemini 3.1 pro for this assignment. Since I had no experience with website development, I did not utilized agents, as I had no idea what tasks to deligate to them. In retrospective, I should have used at least 2 agents, one developing and one testing, with preferably a third one acting as complince manager, checking the connections between the two and their complince with the requierments.
 key prompts:
-1)
+
+1) 
     Help me with this assigment. Asume the following facts:
     1) I am unfamiliar with typescript, Node.js or backend development
     2) We are using typescript to solve this assigment
     3) The envirment is set up, including the docker, and the server is up. I am using VSCode, and have the extensions necessery, including thunder client.
     4) I have already completed part 2.1, and have a fully functional user regestry that is connected
     What would you recommend as the next step? If it is simmilar to the user regestry, just provide section name and general instructions, including the neccessary files to modify. Otherwise, provide implementation detail 
+    
 
 2) You used user.password. However, this field does not exist in the current version od the user regestry
 3) Continue to section 2.3. If any CLI is needed, make sure to include it in your response. If it is better to start with implemeniting the ticket system, state that and continue to the neccessery steps
@@ -17,7 +19,7 @@ key prompts:
 8) You are a senior backend developer. You have recieved this project, and have to change it to implemet requierment 3.5, the soft delete of tickets and projects. Make sure to make the deleted tickets/projects available only to ADMIN at the specified endpoint. In addition, show all the changes required to implement this in all the previously completed files. 
 9) The instructions specificly stated that GET /tickets/deleted?projectId={id}  returns the deleted project, and  GET /projects/deleted returns all of the deleted. In addition, you completely ignored the admin's ability to restore deleted tickets 
 10) You are a senior software engenier, who specilizes in backend development. You are tasked with implementing the Audit log feature: The system must maintain a persistent, append-only record of all state-changing actions performed within the application. This ensures a transparent history of project and ticket evolutions.All state changing actions should be recorded – those that were manually requested by the useror automatically ran by the system.  Provide an endpoint to retrieve all logs, or filtered by a specific filed. Pay close attention to the fact that the log must record all state changes. Write exactly where to change or add code to the existing code. If a change is repetative across all reerlevent files, write it once and notify all the locations it needs to be added 
-11)
+11) 
      You are a senior software developer, with expertise in QC and testing. Write extensive testing, covering all the requirements writen in the instructions. Note that the server was implemented using typescript.
 
     Your test should include but not be limited to:
