@@ -21,7 +21,7 @@ export class ProjectsController {
     return this.projectsService.findTrash();
   }
 
-  @Patch(':id/restore')
+  @Post(':id/restore')
   restore(@Param('id') id: string, @Request() req) {
     if (req.user.role !== 'ADMIN') {
       throw new ForbiddenException('Only administrators can restore deleted projects.');

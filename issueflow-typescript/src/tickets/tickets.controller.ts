@@ -23,7 +23,7 @@ export class TicketsController {
     return this.ticketsService.findTrash(+projectId);
   }
 
-  @Patch(':id/restore')
+  @Post(':id/restore')
   restore(@Param('id') id: string, @Request() req) {
     if (req.user.role !== 'ADMIN') {
       throw new ForbiddenException('Only administrators can restore deleted tickets.');
